@@ -53,6 +53,16 @@
   delay: 30
   until: local_volume_success is not failed
 
+- name: Apply ODF nano source
+  k8s: 
+    state: present
+    definition: "{{ lookup('file', 'odfnano_source.yaml') }}"
+    register: odfnano_source_success
+  retries: 20
+  delay: 30
+  until: odfnano_source_success is not failed
+  when: ocp_aio_nanodf
+
 - name: Apply ocs-operator configuration
   k8s:
     state: present
@@ -61,7 +71,7 @@
   retries: 20
   delay: 30
   until: ocs_operator_success is not failed
-  when: ocp4_aio_subversion is version('4.9', operator='lt', strict=True)
+  when: ocp4_aio_subversion is version('4.9', operator='lt', strict=True) and not ocp4_aio_nanodf
 
 - name: Apply odf-operator configuration
   k8s:
@@ -71,7 +81,17 @@
   retries: 20
   delay: 30
   until: ocs_operator_success is not failed
-  when: ocp4_aio_subversion is version('4.9', operator='ge', strict=True)
+  when: ocp4_aio_subversion is version('4.9', operator='ge', strict=True) and not ocp4_aio_nanodf
+
+- name: Apply ODF-nano operator configuration
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'odf-nanoperator.yaml') }}"
+  register: ocs_operator_success
+  retries: 20
+  delay: 30
+  until: ocs_operator_success is not failed
+  when: ocp4_aio_nanodf
 
 - name: Apply storage-cluster configuration
   k8s:
@@ -101,6 +121,46 @@
   retries: 20
   delay: 30
   until: storage_cluster_success is not failed
+  when: ocp4_aio_nanodf
+
+- name: Create Block Pool for ODF Nano
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'blockpool-nanodf.yaml') }}"
+  register: block_pool_success
+  retries: 20
+  delay: 30
+  until: block_pool_success is not failed
+  when: ocp4_aio_nanodf
+
+- name: Create StorageClass for ODF Nano
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'storageclass-nanodf.yaml') }}"
+  register: storage_class_success
+  retries: 20
+  delay: 30
+  until: storage_class_success is not failed
+  when: ocp4_aio_nanodf
+
+- name: Create Ceph FS for ODF Nano
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'cephfs-nanodf.yaml') }}"
+  register: cephfs_success
+  retries: 20
+  delay: 30
+  until: cephfs_success is not failed
+  when: ocp4_aio_nanodf
+
+- name: Create CephFS StorageClass for ODF Nano
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'sc-cephfs-nanodf.yaml') }}"
+  register: cephfs_storage_class_success
+  retries: 20
+  delay: 30
+  until: cephfs_storage_class_success is not failed
   when: ocp4_aio_nanodf
 
 - name: Unset default storage class for nfs

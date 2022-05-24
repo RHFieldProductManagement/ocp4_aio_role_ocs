@@ -1,0 +1,18 @@
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: ocs-storagecluster-cephblockpool
+  namespace: openshift-storage
+spec:
+  compressionMode: ""
+  crushRoot: ""
+  deviceClass: ""
+  enableRBDStats: true
+  erasureCoded:
+    algorithm: ""
+    codingChunks: 0
+    dataChunks: 0
+  failureDomain: osd
+  replicated:
+    requireSafeReplicaSize: false
+    size: 2
