@@ -1,0 +1,72 @@
+
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+  name: ocs-storagecluster-cephobjectstore
+  namespace: openshift-storage
+spec:
+  dataPool:
+    crushRoot: ""
+    deviceClass: ""
+    erasureCoded:
+      algorithm: ""
+      codingChunks: 0
+      dataChunks: 0
+    failureDomain: osd
+    replicated:
+      requireSafeReplicaSize: false
+      size: 2
+  gateway:
+    allNodes: false
+    instances: 1
+    placement: {}
+    port: 80
+    resources: {}
+    securePort: 0
+    sslCertificateRef: ""
+  metadataPool:
+    crushRoot: ""
+    deviceClass: ""
+    erasureCoded:
+      algorithm: ""
+      codingChunks: 0
+      dataChunks: 0
+    failureDomain: osd
+    replicated:
+      size: 2
+      requireSafeReplicaSize: false
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: ocs-storagecluster-ceph-rgw
+provisioner: openshift-storage.ceph.rook.io/bucket
+parameters:
+  objectStoreName: ocs-storagecluster-cephobjectstore
+  objectStoreNamespace: openshift-storage
+  region: us-east-1
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: rgw
+  namespace: openshift-storage
+  labels:
+    app: rook-ceph-rgw
+    ceph_daemon_id: ocs-storagecluster-cephobjectstore
+    ceph_daemon_type: rgw
+    rgw: ocs-storagecluster-cephobjectstore
+    rook_cluster: openshift-storage
+    rook_object_store: ocs-storagecluster-cephobjectstore
+spec:
+  to:
+    kind: Service
+    name: rook-ceph-rgw-ocs-storagecluster-cephobjectstore
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow

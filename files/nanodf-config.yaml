@@ -12,5 +12,5 @@ data:
     osd_memory_target_cgroup_limit_ratio = 0.5
 kind: ConfigMap
 metadata:
-  name: rook-config-nanoverride
+  name: rook-config-override
   namespace: openshift-storage
